@@ -4,7 +4,8 @@ from sqlalchemy import update
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 import settings
-from base.models import User, Item, engine, conn
+from base.models import User, Item, conn
+from datetime import date
 
 bot = TelegramClient(StringSession(), settings.API_ID, settings.API_HASH).start(bot_token = settings.BOT_TOKEN)
 
@@ -38,6 +39,15 @@ async def send_info(event):
 
 @bot.on(events.CallbackQuery(data = b'boxes'))
 async def get_boxes(event):
+	salary_ = await salary_dbase_create(event)
+	if salary_ == 250:
+		pass
+	if salary_ == 500:
+		pass
+	if salary_ == 1000:
+		pass
+	if salary_ == 2000:
+		pass
 	await event.reply(settings.BOX_INSIDE,
 	                  buttons = [settings.BACK_BUTTON,
 	                             settings.HOW_TO_OPEN_BUTTON,
@@ -72,33 +82,25 @@ async def payment(event):
 @bot.on(events.CallbackQuery(data = b'open_2000'))
 async def OpenBox(event):
 	sender = await event.get_sender()
-	print(sender.username)
-	print('EVENT DATA', event.data)
-	num = str(event.data).split('_')[1]
-	box = int(num[:len(num) - 1])
-	print('BOX', box)
-	users_salary = User.select().where(User.c.username == sender.username)
-	salary__ = conn.execute(users_salary).fetchone()
-	if salary__ is None:
-		insert_values = User.insert().values(username = sender.username)
-		conn.execute(insert_values)
-		users_salary = User.select().where(User.c.username == sender.username)
-	salary__ = conn.execute(users_salary).fetchone()
-	salary_ = int(salary__.salary)
-	print('END_SALARY', salary_)
+	box = await get_box(event)
+	salary_ = await salary_dbase_create(event)
+	daily = await daily_limit(event)
 	if salary_ < box:
 		await event.reply('Сумма баланса недостаточна для покупки кейса. Пополните ваш баланс',
 		                  buttons = [settings.BACK_BUTTON, settings.PAYMENT_BUTTON, settings.BOXES_BUTTON])
+	elif daily >= 3:
+		await event.reply('Извините вы превысили лимит открытия коробок!Лимит в день: 3.',
+		                  buttons = [settings.BACK_BUTTON, settings.PAYMENT_BUTTON, settings.BOXES_BUTTON])
 	else:
-		salary_after = update(User).where(User.c.username == sender.username).values(salary = salary_ - box)
+		salary_after = await update(User).where(User.c.username == sender.username).values(salary = salary_ - box)
 		conn.execute(salary_after)
 		if box == 250:
-			chosen_item = random.choices(settings.CHOICES[int(box)], weights = (40, 40, 20))[0]
+			chosen_item = await random.choices(settings.CHOICES[int(box)], weights = (40, 40, 20))[0]
 		elif box == 500:
-			chosen_item = random.choices(settings.CHOICES[int(box)], weights = (35, 15, 35, 15))[0]
+			chosen_item = await random.choices(settings.CHOICES[int(box)], weights = (35, 15, 35, 15))[0]
 		else:
-			chosen_item = random.choices(settings.CHOICES[int(box)], weights = (20, 40, 20))[0]
-		insert_values = Item.insert().values(owner = sender.username, item = chosen_item)
+			chosen_item = await random.choices(settings.CHOICES[int(box)], weights = (20, 40, 20))[0]
+		insert_values = await Item.insert().values(owner = sender.username, item = chosen_item)
 		conn.execute(insert_values)
 		await event.reply(f'Поздравляю!Вы выиграли{chosen_item}',
 		                  buttons = [settings.BACK_BUTTON, settings.INVENTORY_BUTTON])
@@ -107,7 +109,7 @@ async def OpenBox(event):
 @bot.on(events.CallbackQuery(data = b'inventory'))
 async def get_inventory(event):
 	sender = await event.get_sender()
-	inventory_values = Item.select().where(Item.c.owner == sender.username)
+	inventory_values = await Item.select().where(Item.c.owner == sender.username)
 	values__ = conn.execute(inventory_values).fetchall()
 	# values_ = values__.item
 	all_items = []
@@ -119,3 +121,29 @@ async def get_inventory(event):
 
 if __name__ == '__main__':
 	bot.run_until_disconnected()
+
+
+async def salary_dbase_create(event) -> int:
+	sender = await event.get_sender()
+	users_info = User.select().where(User.c.username == sender.username)
+	salary__ = conn.execute(users_info).fetchone()
+	if salary__ is None:
+		insert_values = User.insert().values(username = sender.username)
+		conn.execute(insert_values)
+		users_info = User.select().where(User.c.username == sender.username)
+	salary__ = conn.execute(users_info).fetchone()
+	salary_ = int(salary__.salary)
+	return salary_
+
+
+async def daily_limit(event) -> int:
+	sender = await event.get_sender()
+	items_daily = Item.select().where(Item.c.username == sender.username, date = date.today())
+	daily = conn.execute(items_daily).fetchall()
+	return daily
+
+
+async def get_box(event) -> int:
+	num = str(event.data).split('_')[1]
+	box = int(num[:len(num) - 1])
+	return box
