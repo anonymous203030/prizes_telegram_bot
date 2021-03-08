@@ -1,4 +1,6 @@
-from sqlalchemy import Integer, Column, String, ForeignKey, create_engine, MetaData, Table
+from datetime import date
+
+from sqlalchemy import Integer, Column, String, ForeignKey, create_engine, MetaData, Table, Date, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -13,7 +15,8 @@ User = Table('User', meta,
 
 Item = Table('Item', meta,
              Column('id', Integer, primary_key = True),
-             Column('item', String, ),
+             Column('item', String, nullable = False),
+             Column('date', Date, default=date),
              Column('owner', String, ForeignKey('User.username'))
              )
 
