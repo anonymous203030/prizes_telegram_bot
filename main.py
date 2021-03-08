@@ -177,7 +177,7 @@ async def OpenBox(event):
 			                             settings.OPEN_BOX_1000_BUTTON,
 			                             settings.INVENTORY_BUTTON])
 		else:
-			insert_values = Item.insert().values(owner = sender.username, item = chosen_item, date=date.today())
+			insert_values = Item.insert().values(owner = sender.username, item = chosen_item, date = date.today())
 			conn.execute(insert_values)
 			await event.reply(f'Поздравляю!Вы выиграли: {chosen_item}',
 			                  buttons = [settings.BACK_BUTTON,
