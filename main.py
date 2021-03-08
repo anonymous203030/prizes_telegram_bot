@@ -138,10 +138,18 @@ async def payment(event):
 	                             settings.BOXES_BUTTON])
 
 
-@bot.on(events.CallbackQuery(data = b'open_250'))
-@bot.on(events.CallbackQuery(data = b'open_500'))
-@bot.on(events.CallbackQuery(data = b'open_1000'))
-@bot.on(events.CallbackQuery(data = b'open_2000'))
+# Open Many Boxes
+@bot.on(events.CallbackQuery(data = b'open_2_250'))
+@bot.on(events.CallbackQuery(data = b'open_3_250'))
+@bot.on(events.CallbackQuery(data = b'open_2_500'))
+@bot.on(events.CallbackQuery(data = b'open_3_500'))
+@bot.on(events.CallbackQuery(data = b'open_2_1000'))
+@bot.on(events.CallbackQuery(data = b'open_3_1000'))
+# Open One Box
+@bot.on(events.CallbackQuery(data = b'open_1_250'))
+@bot.on(events.CallbackQuery(data = b'open_1_500'))
+@bot.on(events.CallbackQuery(data = b'open_1_1000'))
+@bot.on(events.CallbackQuery(data = b'open_1_2000'))
 async def OpenBox(event):
 	sender = await event.get_sender()
 	box_num = await get_box(event)
