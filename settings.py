@@ -29,10 +29,22 @@ PHONE_BUTTON = [Button.request_phone('Верификация Телефона')]
 INVENTORY_BUTTON = [Button.inline('Инвентарь', b'inventory')]
 
 # Box Buttons
-OPEN_BOX_1_BUTTON = [Button.inline('Открыть Коробку "Базовый Кейс"(250р)', b'open_250')]
-OPEN_BOX_2_BUTTON = [Button.inline('Открыть Коробку "Базовый Кейс"(500р)', b'open_500')]
-OPEN_BOX_3_BUTTON = [Button.inline('Открыть Коробку "Кейс для Вельмож"(1000р)', b'open_1000')]
-OPEN_BOX_4_BUTTON = [Button.inline('Открыть Коробку "Кейс для Маценатов"(2000р)', b'open_2000')]
+OPEN_BOX_250_BUTTON = [Button.inline('Открыть Коробку "Базовый Кейс"(250р)', b'open_1_250')]
+OPEN_BOX_500_BUTTON = [Button.inline('Открыть Коробку "Базовый Кейс"(500р)', b'open_1_500')]
+OPEN_BOX_1000_BUTTON = [Button.inline('Открыть Коробку "Кейс для Вельмож"(1000р)', b'open_1_1000')]
+OPEN_BOX_2000_BUTTON = [Button.inline('Открыть Коробку "Кейс для Маценатов"(2000р)', b'open_1_2000')]
+
+# Open Many Boxes
+# 250
+OPEN_2_250_BUTTON = [Button.inline('Открыть 2 Коробки "Кейс для "Базовый Кейс"(250р)', b'open_2_250')]
+OPEN_3_250_BUTTON = [Button.inline('Открыть 3 Коробки "Кейс для "Базовый Кейс"(250р)', b'open_3_250')]
+# 500
+OPEN_2_500_BUTTON = [Button.inline('Открыть 2 Коробки "Кейс для "Базовый Кейс"(500р)', b'open_3_500')]
+OPEN_3_500_BUTTON = [Button.inline('Открыть 3 Коробки "Кейс для "Базовый Кейс"(500р)', b'open_3_500')]
+# 1000
+OPEN_2_1000_BUTTON = [Button.inline('Открыть 2 Коробки "Кейс для "Базовый Кейс"(1000р)', b'open_3_1000')]
+OPEN_3_1000_BUTTON = [Button.inline('Открыть 3 Коробки "Кейс для "Базовый Кейс"(1000р)', b'open_3_1000')]
+
 
 # Bot messages
 START = ['/start', 'start', 'run', 'hi', 'hello', '/run']
