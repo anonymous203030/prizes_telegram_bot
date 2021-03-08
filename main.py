@@ -87,7 +87,17 @@ async def get_boxes(event):
 		                       settings.PAYMENT_BUTTON,
 		                       settings.INVENTORY_BUTTON])
 	if salary_ == 1000:
-		pass
+		event.reply('Вы можете открыть:\n'
+		            '3 коробки по 250р\n'
+		            '2 коробки по 500р\n'
+		            '1 коробку по 1000р',
+		            buttons = [settings.BACK_BUTTON,
+		                       settings.OPEN_3_250_BUTTON,
+		                       settings.OPEN_2_500_BUTTON,
+		                       settings.OPEN_BOX_1000_BUTTON,
+		                       settings.HOW_TO_OPEN_BUTTON,
+		                       settings.PAYMENT_BUTTON,
+		                       settings.INVENTORY_BUTTON])
 	if salary_ == 2000:
 		pass
 	await event.reply(settings.BOX_INSIDE,
