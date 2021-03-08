@@ -1,6 +1,6 @@
 import random
 
-from sqlalchemy import update
+from sqlalchemy import update, and_
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 import settings
@@ -8,6 +8,35 @@ from base.models import User, Item, conn
 from datetime import date
 
 bot = TelegramClient(StringSession(), settings.API_ID, settings.API_HASH).start(bot_token = settings.BOT_TOKEN)
+
+
+async def salary_dbase_create(event) -> int:
+	sender = await event.get_sender()
+	users_info = User.select().where(User.c.username == sender.username)
+	salary__ = conn.execute(users_info).fetchone()
+	if salary__ is None:
+		insert_values = User.insert().values(username = sender.username, salary = 0)
+		conn.execute(insert_values)
+		users_info = User.select().where(User.c.username == sender.username)
+	salary__ = conn.execute(users_info).fetchone()
+	salary_ = int(salary__.salary)
+	return salary_
+
+
+async def daily_limit(event) -> list:
+	sender = await event.get_sender()
+	items_daily = Item.select().where(and_(Item.c.owner == sender.username, Item.c.date == date.today()))
+	daily = conn.execute(items_daily).fetchall()
+	return daily
+
+
+async def get_box(event) -> list:
+	num = int(str(event.data).split('_')[1])
+	print('NUM', num)
+	val = str(event.data).split('_')[2]
+	print('VAL', val)
+	box = int(val[:len(val) - 1])
+	return [box, num]
 
 
 @bot.on(events.CallbackQuery(data = b'back'))
@@ -53,9 +82,9 @@ async def get_boxes(event):
 	                             settings.HOW_TO_OPEN_BUTTON,
 	                             settings.PAYMENT_BUTTON,
 	                             settings.INVENTORY_BUTTON,
-	                             settings.OPEN_BOX_1_BUTTON,
-	                             settings.OPEN_BOX_2_BUTTON,
-	                             settings.OPEN_BOX_3_BUTTON])
+	                             settings.OPEN_BOX_250_BUTTON,
+	                             settings.OPEN_BOX_500_BUTTON,
+	                             settings.OPEN_BOX_1000_BUTTON])
 
 
 @bot.on(events.CallbackQuery(data = b'how_to_open'))
@@ -82,68 +111,69 @@ async def payment(event):
 @bot.on(events.CallbackQuery(data = b'open_2000'))
 async def OpenBox(event):
 	sender = await event.get_sender()
-	box = await get_box(event)
+	box_num = await get_box(event)
+	box, num = box_num[0], box_num[1]
 	salary_ = await salary_dbase_create(event)
+	print('SALARY', salary_)
 	daily = await daily_limit(event)
 	if salary_ < box:
-		await event.reply('Сумма баланса недостаточна для покупки кейса. Пополните ваш баланс',
+		await event.reply('Сумма баланса недостаточна для покупки кейса. Пополните ваш баланс\n'
+		                  f'Ваш баланс: {salary_}',
 		                  buttons = [settings.BACK_BUTTON, settings.PAYMENT_BUTTON, settings.BOXES_BUTTON])
-	elif daily >= 3:
+	elif len(daily) >= 3:
 		await event.reply('Извините вы превысили лимит открытия коробок!Лимит в день: 3.',
 		                  buttons = [settings.BACK_BUTTON, settings.PAYMENT_BUTTON, settings.BOXES_BUTTON])
 	else:
-		salary_after = await update(User).where(User.c.username == sender.username).values(salary = salary_ - box)
+		salary_after = update(User).where(User.c.username == sender.username).values(salary = salary_ - box)
 		conn.execute(salary_after)
 		if box == 250:
-			chosen_item = await random.choices(settings.CHOICES[int(box)], weights = (40, 40, 20))[0]
+			chosen_item = random.choices(settings.CHOICES[int(box)], weights = (40, 40, 20), k = num)[0]
 		elif box == 500:
-			chosen_item = await random.choices(settings.CHOICES[int(box)], weights = (35, 15, 35, 15))[0]
+			chosen_item = random.choices(settings.CHOICES[int(box)], weights = (35, 15, 35, 15), k = num)[0]
 		else:
-			chosen_item = await random.choices(settings.CHOICES[int(box)], weights = (20, 40, 20))[0]
-		insert_values = await Item.insert().values(owner = sender.username, item = chosen_item)
-		conn.execute(insert_values)
-		await event.reply(f'Поздравляю!Вы выиграли{chosen_item}',
-		                  buttons = [settings.BACK_BUTTON, settings.INVENTORY_BUTTON])
+			chosen_item = random.choices(settings.CHOICES[int(box)], weights = (20, 40, 20), k = num)[0]
+		if type(chosen_item) is not str:
+			for item_ in chosen_item:
+				insert_values = Item.insert().values(owner = sender.username, item = item_)
+				conn.execute(insert_values)
+
+			await event.reply(f"Поздравляю!Вы выиграли: {chosen_item.split(', ')}",
+			                  buttons = [settings.BACK_BUTTON,
+			                             settings.OPEN_BOX_250_BUTTON,
+			                             settings.OPEN_BOX_500_BUTTON,
+			                             settings.OPEN_BOX_1000_BUTTON,
+			                             settings.INVENTORY_BUTTON])
+		else:
+			insert_values = Item.insert().values(owner = sender.username, item = chosen_item, date=date.today())
+			conn.execute(insert_values)
+			await event.reply(f'Поздравляю!Вы выиграли: {chosen_item}',
+			                  buttons = [settings.BACK_BUTTON,
+			                             settings.OPEN_BOX_250_BUTTON,
+			                             settings.OPEN_BOX_500_BUTTON,
+			                             settings.OPEN_BOX_1000_BUTTON,
+			                             settings.INVENTORY_BUTTON])
 
 
 @bot.on(events.CallbackQuery(data = b'inventory'))
 async def get_inventory(event):
 	sender = await event.get_sender()
-	inventory_values = await Item.select().where(Item.c.owner == sender.username)
+	inventory_values = Item.select().where(Item.c.owner == sender.username)
 	values__ = conn.execute(inventory_values).fetchall()
 	# values_ = values__.item
-	all_items = []
-	for item in values__:
-		all_items.append(item[1])
-	await event.reply(f'Ваш инвентарь: {", ".join(all_items)}',
-	                  buttons = [settings.BACK_BUTTON, settings.PAYMENT_BUTTON, settings.BOXES_BUTTON])
+	if not values__:
+		await event.reply('Ваш Инвентарь Пустой.',
+		                  buttons = [settings.BACK_BUTTON,
+		                             settings.PAYMENT_BUTTON,
+		                             settings.BOXES_BUTTON])
+	else:
+		all_items = []
+		for item in values__:
+			all_items.append(item[1])
+		await event.reply(f'Ваш инвентарь: {", ".join(all_items)}',
+		                  buttons = [settings.BACK_BUTTON,
+		                             settings.PAYMENT_BUTTON,
+		                             settings.BOXES_BUTTON])
 
 
 if __name__ == '__main__':
 	bot.run_until_disconnected()
-
-
-async def salary_dbase_create(event) -> int:
-	sender = await event.get_sender()
-	users_info = User.select().where(User.c.username == sender.username)
-	salary__ = conn.execute(users_info).fetchone()
-	if salary__ is None:
-		insert_values = User.insert().values(username = sender.username)
-		conn.execute(insert_values)
-		users_info = User.select().where(User.c.username == sender.username)
-	salary__ = conn.execute(users_info).fetchone()
-	salary_ = int(salary__.salary)
-	return salary_
-
-
-async def daily_limit(event) -> int:
-	sender = await event.get_sender()
-	items_daily = Item.select().where(Item.c.username == sender.username, date = date.today())
-	daily = conn.execute(items_daily).fetchall()
-	return daily
-
-
-async def get_box(event) -> int:
-	num = str(event.data).split('_')[1]
-	box = int(num[:len(num) - 1])
-	return box
