@@ -70,7 +70,12 @@ async def send_info(event):
 async def get_boxes(event):
 	salary_ = await salary_dbase_create(event)
 	if salary_ == 250:
-		pass
+		event.reply('Вы можете открыть 1 коробку 250',
+		            buttons = [settings.BACK_BUTTON,
+		                       settings.HOW_TO_OPEN_BUTTON,
+		                       settings.PAYMENT_BUTTON,
+		                       settings.INVENTORY_BUTTON,
+		                       settings.OPEN_BOX_250_BUTTON])
 	if salary_ == 500:
 		pass
 	if salary_ == 1000:
