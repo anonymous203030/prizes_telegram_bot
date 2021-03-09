@@ -17,7 +17,7 @@ Telegram Bot where user have a chance to fill balance and open boxes with prizes
 <hr>
 <hr>
 <h3><p>
-1. Create And Activate venv (python3 -m venv venv && source venv/bin/activate)
-2. pip3 install -r requirements.txt
-3. python3 main.py
-</p></h3>
+1. Create And Activate venv (python3 -m venv venv && source venv/bin/activate)<br>
+2. pip3 install -r requirements.txt<br>
+3. python3 main.py<br>
+</p></h3><br>
